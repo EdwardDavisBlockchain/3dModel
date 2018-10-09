@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>WebGL</title>
+	<script type="text/javascript" charset="utf-8" src="./js/three.js"></script>
+	<script src="./js/STLLoader.js"></script>
+	<script src="./js/TrackballControls.js"></script>
+	<script src="./js/AsciiEffect.js"></script>
+	<style>body{overflow:hidden;background:#eee}</style>
+</head>
+<script>
+	var WIDTH,HEIGHT;
+	var	renderer;
+	function initThree() {
+		WIDTH = document.documentElement.clientWidth/2;<!--{foreach from=$recommended_goods item=rgoods}--> <!-- {/foreach} -->
+		HEIGHT = document.documentElement.clientHeight/2;
+		/* 渲染器 */
+		renderer = new THREE.WebGLRenderer();
+		renderer.setSize(WIDTH , HEIGHT);
+		renderer.setClearColor(new THREE.Color(0x66666));
+
+		renderer.gammaInput = true;
+		renderer.gammaOutput = true;
+
+		document.body.appendChild(renderer.domElement);
+	}
+
+	/* 摄像头 */
+	var camera;
+	function initCamera() {
+		var VIEW_ANGLE = 45,
+				ASPECT = WIDTH / HEIGHT,
+				NEAR = 0.1,
+				FAR = 10000;
+		camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+		camera.position.set(20, 0, 0);
+		//设置视野的中心坐标
+		camera.lookAt(scene.position);
+	}
+
+	/* 场景 */
+	var scene;
+	function initScene() {
+		scene = new THREE.Scene();
+	}
+
+	/* 灯光 */
+	var light,light2,light3;
+	function initLight() {
+		//平行光
+		light = new THREE.DirectionalLight(0xFFFFFF);
+		light.position.set(0, 99, 0).normalize();
+		scene.add(light);
+		//环境光
+		light2 = new THREE.AmbientLight(0x999999);
+		scene.add(light2);
+		//点光源
+		light3 = new THREE.PointLight(0x00FF00);
+		light3.position.set(300, 0, 0);
+		scene.add(light3);
+	}
+
+	/* 显示对象 */
+	var cube;
+	function initObject(){
+		// ASCII file
+		var loader = new THREE.STLLoader();
+
+		loader.addEventListener( 'load', function ( event ) {
+			var loading = document.getElementById("Loading");
+			loading.parentNode.removeChild(loading);
+			var geometry = event.content;
+
+	//砖红色
+	var material = new THREE.MeshPhongMaterial( { ambient: 0xff5533, color: 0xff5533, specular: 0x111111, shininess: 200 } );
+	//纯黑色
+//			var material = new THREE.MeshBasicMaterial( { envMap: THREE.ImageUtils.loadTexture( 'http://localhost:8080/textures/metal.jpg', new THREE.SphericalReflectionMapping() ), overdraw: true } ) ;
+	//粉色 带阴影
+//			var material = new THREE.MeshLambertMaterial( { color:0xff5533, side: THREE.DoubleSide } );
+	//灰色
+//			var material = new THREE.MeshLambertMaterial({color: 000000});    //材质设定  (颜色)
+
+	var mesh = new THREE.Mesh( geometry, material );
+	var center = THREE.GeometryUtils.center(geometry);
+	var boundbox=geometry.boundingBox;
+	var vector3 = boundbox.size(null);
+	var vector3 = boundbox.size(null);
+	var scale = vector3.length();
+	camera.position.set(scale, 0, 0);
+	camera.lookAt(scene.position);
+	scene.add(camera);
+
+	//利用一个轴对象以可视化的3轴以简单的方式。X轴是红色的。Y轴是绿色的。Z轴是蓝色的。这有助于理解在空间的所有三个轴的方向。要添加这个帮手，使用下面的代码：
+	var axisHelper = new THREE.AxisHelper(800);
+	scene.add(axisHelper);
+
+	//周围边框
+	bboxHelper = new THREE.BoxHelper();
+	bboxHelper.visible = true;
+	var meshMaterial = material;
+	mainModel = new THREE.Mesh(geometry, meshMaterial);
+	bboxHelper.update(mainModel);
+	bboxHelper.geometry.computeBoundingBox();
+	scene.add(bboxHelper);
+
+
+		//它吸引的特定对象3D对象（它看起来像金字塔）与线几何，这有助于可视化什么指定摄像机包含在它的视锥。
+//			var cameraParObj = new THREE.Object3D();
+//			cameraParObj.position.y = 200;
+//			cameraParObj.position.z = 700;
+//			scene.add(cameraParObj);
+//			perspectiveCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 1500);
+//			cameraParObj.add(perspectiveCamera);
+//			var cameraHelper = new THREE.CameraHelper(perspectiveCamera);
+//			scene.add(cameraHelper);
+
+
+		//地板网格
+		//var gridHelper = new THREE.GridHelper(500, 40); // 500 is grid size, 20 is grid step
+		//gridHelper.position = new THREE.Vector3(0, 0, 0);
+		//gridHelper.rotation = new THREE.Euler(0, 0, 0);
+		//scene.add(gridHelper);
+		//var gridHelper2 = gridHelper.clone();
+		//gridHelper2.rotation = new THREE.Euler(Math.PI / 2, 0, 0);
+		//scene.add(gridHelper2);
+		//var gridHelper3 = gridHelper.clone();
+		//gridHelper3.rotation = new THREE.Euler(Math.PI / 2, 0, Math.PI / 2);
+		//scene.add(gridHelper3);
+
+		//var grid = new THREE.GridHelper(300, 40, 25, [0, 0, 1], 0x000055, 0.2, true, "#FFFFFF", "left");
+		//scene.add(grid);
+
+		mesh.position.set(0,0,0);
+//			mesh.position.x = scene.position.x;
+//			mesh.position.y = scene.position.y ;
+//			mesh.position.z = scene.position.z;
+		scene.add(mesh);
+
+		renderer.clear();
+		renderer.render(scene, camera);
+	} );
+	 loader.load( './3dfile/莫比乌斯环.STL' );
+}
+
+	//控制
+	var effect;
+	var controls;
+	function initControl(){
+		effect = new THREE.AsciiEffect( renderer );
+		effect.setSize( WIDTH, HEIGHT );
+		controls = new THREE.TrackballControls( camera,renderer.domElement);
+	}
+
+
+	
+
+	function animate() {
+		requestAnimationFrame( animate );
+		controls.update();
+		effect.render( scene, camera );
+	}
+	function threeStart() {
+		initThree();
+		initScene();
+		initCamera();
+		initLight();
+		initObject();
+		initControl();
+		animate();
+	}
+</script>
+<body onload="threeStart()">
+<div id="Loading" style="color:#fff">Loading...</div>
+</body>
+</html>
